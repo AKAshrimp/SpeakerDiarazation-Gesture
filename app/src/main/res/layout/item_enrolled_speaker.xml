@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#2E2E2E"
+    android:padding="12dp"
+    android:layout_marginBottom="12dp">
+
+    <TextView
+        android:id="@+id/tvSpeakerName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="說話者名稱"
+        android:textColor="#2196F3"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvSpeakerDetails"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="語言：yue  |  建立：2025-10-29"
+        android:textColor="#CCCCCC"
+        android:textSize="13sp"
+        android:layout_marginTop="4dp" />
+
+    <CheckBox
+        android:id="@+id/cbMuteSpeaker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="隱藏此說話者"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="6dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/btnPlaySample"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="播放錄音"
+            android:textSize="13sp"
+            android:backgroundTint="#455A64"
+            android:textColor="#FFFFFF"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp" />
+
+        <Button
+            android:id="@+id/btnReRecord"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="重新錄製"
+            android:textSize="13sp"
+            android:backgroundTint="#2196F3"
+            android:textColor="#FFFFFF"
+            android:layout_marginLeft="8dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp" />
+
+        <Button
+            android:id="@+id/btnDeleteSpeaker"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="刪除"
+            android:textSize="13sp"
+            android:backgroundTint="#E53935"
+            android:textColor="#FFFFFF"
+            android:layout_marginLeft="8dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp" />
+    </LinearLayout>
+
+</LinearLayout>

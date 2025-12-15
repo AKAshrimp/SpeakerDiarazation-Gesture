@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="#1E1E1E">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageButton
+            android:id="@+id/btnClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_back"
+            android:tint="#FFFFFF"
+            android:contentDescription="返回"
+            android:padding="8dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="註冊說話者"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="請先閱讀以下提示句，待會按住按鈕朗讀。"
+        android:textColor="#BBBBBB"
+        android:textSize="15sp"
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/tvSampleSentence"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="樣本句子"
+        android:textColor="#2196F3"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:padding="16dp"
+        android:background="#2E2E2E"
+        android:layout_marginTop="12dp" />
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="請按住按鈕開始錄音"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:layout_marginTop="20dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:minHeight="0dp" />
+
+    <ProgressBar
+        android:id="@+id/progressEnrollment"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:visibility="gone"
+        android:indeterminate="true"
+        android:indeterminateTint="#2196F3"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btnHoldToRecord"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="按住開始錄音"
+        android:textSize="16sp"
+        android:backgroundTint="#4CAF50"
+        android:textColor="#FFFFFF"
+        android:padding="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:id="@+id/btnPlayRecording"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="播放錄音"
+            android:backgroundTint="#455A64"
+            android:textColor="#FFFFFF"
+            android:padding="12dp" />
+
+        <Button
+            android:id="@+id/btnDiscardRecording"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="重新錄製"
+            android:backgroundTint="#757575"
+            android:textColor="#FFFFFF"
+            android:padding="12dp"
+            android:layout_marginStart="12dp" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnSubmitEnrollment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="完成註冊"
+        android:textSize="16sp"
+        android:backgroundTint="#2196F3"
+        android:textColor="#FFFFFF"
+        android:padding="16dp"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>

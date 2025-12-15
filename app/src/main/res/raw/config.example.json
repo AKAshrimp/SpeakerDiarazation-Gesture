@@ -1,0 +1,9 @@
+{
+  "api_key": "YOUR_SPEECHMATICS_API_KEY",
+  "language": "yue",
+  "operating_point": "enhanced",
+  "max_delay_seconds": 2,
+  "max_delay_mode": "fixed",
+  "speaker_sensitivity": 1.0,
+  "region": "eu"
+}

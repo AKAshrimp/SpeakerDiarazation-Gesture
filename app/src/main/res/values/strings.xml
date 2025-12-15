@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">SpeakerDiarazationDemo</string>
+    <string name="transcript_path_format">儲存位置：%1$s</string>
+    <string name="transcript_path_unavailable">儲存位置：無法取得</string>
+</resources>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#2E2E2E"
+    android:padding="12dp"
+    android:layout_marginBottom="12dp">
+
+    <TextView
+        android:id="@+id/tvAudioFileName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="transcript_20251029.txt"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvAudioFileInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="大小：120 KB  |  建立：2025-10-29 14:32"
+        android:textColor="#CCCCCC"
+        android:textSize="13sp"
+        android:layout_marginTop="4dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/btnPlayAudioFile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="檢視"
+            android:textSize="13sp"
+            android:backgroundTint="#455A64"
+            android:textColor="#FFFFFF"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp" />
+
+        <Button
+            android:id="@+id/btnRenameAudioFile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="重新命名"
+            android:textSize="13sp"
+            android:backgroundTint="#607D8B"
+            android:textColor="#FFFFFF"
+            android:layout_marginLeft="8dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp" />
+
+        <Button
+            android:id="@+id/btnDeleteAudioFile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="刪除"
+            android:textSize="13sp"
+            android:backgroundTint="#E53935"
+            android:textColor="#FFFFFF"
+            android:layout_marginLeft="8dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp" />
+    </LinearLayout>
+
+</LinearLayout>

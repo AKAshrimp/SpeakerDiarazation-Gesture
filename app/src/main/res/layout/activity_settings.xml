@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1E1E1E"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="12dp">
+
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_back"
+                android:tint="#FFFFFF"
+                android:contentDescription="返回"
+                android:padding="8dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="設定"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="字體大小"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvFontSizeLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="24 sp"
+            android:textColor="#BBBBBB"
+            android:textSize="14sp" />
+
+        <SeekBar
+            android:id="@+id/seekFontSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="12"
+            android:progress="2"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp"
+            android:progressTint="#4CAF50"
+            android:thumbTint="#4CAF50" />
+
+        <TextView
+            android:id="@+id/tvFontPreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="預覽文字：這裡會顯示實際大小"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:padding="12dp"
+            android:background="#2E2E2E"
+            android:layout_marginBottom="24dp" />
+
+        <Button
+            android:id="@+id/btnSaveSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="儲存設定"
+            android:textSize="16sp"
+            android:backgroundTint="#4CAF50"
+            android:textColor="#FFFFFF"
+            android:padding="12dp" />
+
+        <TextView
+            android:id="@+id/tvTtsEngineLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="TTS 引擎"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinnerTtsEngine"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_spinner_background"
+            android:padding="8dp"
+            android:popupBackground="@drawable/bg_spinner_popup" />
+
+        <Button
+            android:id="@+id/btnTtsSetup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="TTS 語音資料 / 設定"
+            android:textSize="14sp"
+            android:backgroundTint="#455A64"
+            android:textColor="#FFFFFF"
+            android:padding="10dp" />
+
+        <Button
+            android:id="@+id/btnTtsTest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="TTS 測試（Hi / Thank you）"
+            android:textSize="14sp"
+            android:backgroundTint="#607D8B"
+            android:textColor="#FFFFFF"
+            android:padding="10dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#333333"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/tvSpeakerSectionTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="聲紋註冊"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvSpeakerSectionHint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="長按錄音並按照提示朗讀，即可註冊說話者。"
+            android:textColor="#BBBBBB"
+            android:textSize="14sp"
+            android:paddingBottom="12dp" />
+
+        <LinearLayout
+            android:id="@+id/containerEnrolledSpeakers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <TextView
+            android:id="@+id/tvNoSpeakersHint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="目前尚未註冊說話者"
+            android:textColor="#666666"
+            android:textSize="14sp"
+            android:padding="12dp"
+            android:background="#2E2E2E"
+            android:visibility="gone"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/btnAddSpeaker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="新增說話者"
+            android:textSize="16sp"
+            android:backgroundTint="#2196F3"
+            android:textColor="#FFFFFF"
+            android:padding="12dp"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:id="@+id/tvAudioFileSectionTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="文字記錄管理"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvTranscriptPath"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="路徑"
+            android:textColor="#BBBBBB"
+            android:textSize="13sp"
+            android:paddingBottom="8dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvTranscripts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false" />
+
+        <Button
+            android:id="@+id/btnLoadMoreTranscripts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="載入更多"
+            android:textSize="14sp"
+            android:backgroundTint="#455A64"
+            android:textColor="#FFFFFF"
+            android:padding="10dp"
+            android:layout_marginTop="12dp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btnClearTranscripts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="刪除全部記錄"
+            android:textSize="14sp"
+            android:backgroundTint="#E53935"
+            android:textColor="#FFFFFF"
+            android:padding="10dp"
+            android:layout_marginTop="12dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvNoAudioFilesHint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="尚未保存任何文字記錄"
+            android:textColor="#666666"
+            android:textSize="14sp"
+            android:padding="12dp"
+            android:background="#2E2E2E"
+            android:visibility="gone"
+            android:layout_marginBottom="12dp" />
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>
