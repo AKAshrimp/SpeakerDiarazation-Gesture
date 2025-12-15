@@ -23,7 +23,7 @@
 
 1. 複製專案後，於 Android Studio 開啟專案根目錄（本資料夾，內含 `settings.gradle.kts`）。
 2. 建立 Speechmatics 設定檔（請勿提交 API key）：
-   - 複製 `app/src/main/res/raw/config.example.json` → `app/src/main/res/raw/config.json`
+   - 複製 `app/src/main/res/raw/config_example.json` → `app/src/main/res/raw/config.json`
    - 填入 Speechmatics 帳戶對應的 `api_key` 與其他參數
 3. 透過工具列同步 Gradle，確認所有依賴成功下載。
 4. 以 `Run > Run 'app'` 或在終端執行 `./gradlew assembleDebug` 建構 APK。
