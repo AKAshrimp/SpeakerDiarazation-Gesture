@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvTranscriptLabel;
     private Button btnPauseRecording;
     private Button btnStopRecording;
+    private TextView tvRecordingFontSize;
     private CheckBox cbEnableGesture;
     private TextView tvGestureStatus;
     private TextView tvStatusChip;
@@ -159,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
         spinnerLanguage = findViewById(R.id.spinnerLanguage);
         btnPauseRecording = findViewById(R.id.btnPauseRecording);
         btnStopRecording = findViewById(R.id.btnStopRecording);
+        tvRecordingFontSize = findViewById(R.id.tvRecordingFontSize);
         cbEnableGesture = findViewById(R.id.cbEnableGesture);
         tvGestureStatus = findViewById(R.id.tvGestureStatus);
         tvStatusChip = findViewById(R.id.tvStatusChip);
@@ -347,6 +349,9 @@ public class MainActivity extends AppCompatActivity {
         float fontSize = getSavedFontSize();
         if (tvTranscript != null) {
             tvTranscript.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSize);
+        }
+        if (tvRecordingFontSize != null) {
+            tvRecordingFontSize.setText(String.format(Locale.getDefault(), "字體：%.0f", fontSize));
         }
     }
 

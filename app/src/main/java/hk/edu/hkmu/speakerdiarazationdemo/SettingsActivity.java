@@ -185,8 +185,33 @@ public class SettingsActivity extends AppCompatActivity {
             public void onStartTrackingTouch(SeekBar seekBar) {}
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                persistFontSize(getSelectedFontSize());
+            }
         });
+    }
+
+    @Override
+    protected void onPause() {
+        persistFontSize(getSelectedFontSize());
+        super.onPause();
+    }
+
+    private float getSelectedFontSize() {
+        if (seekFontSize == null) {
+            return getSavedFontSize();
+        }
+        return MIN_FONT_SIZE_SP + seekFontSize.getProgress();
+    }
+
+    private void persistFontSize(float fontSize) {
+        if (preferences == null) {
+            return;
+        }
+        float value = fontSize;
+        if (value < MIN_FONT_SIZE_SP) value = MIN_FONT_SIZE_SP;
+        if (value > MAX_FONT_SIZE_SP) value = MAX_FONT_SIZE_SP;
+        preferences.edit().putFloat(PREF_FONT_SIZE_SP, value).apply();
     }
 
     private void initEnrollmentSection() {
@@ -370,10 +395,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void saveFontSize() {
-        float selectedSize = MIN_FONT_SIZE_SP + seekFontSize.getProgress();
-        if (preferences != null) {
-            preferences.edit().putFloat(PREF_FONT_SIZE_SP, selectedSize).apply();
-        }
+        persistFontSize(getSelectedFontSize());
         Toast.makeText(this, "字體大小已更新", Toast.LENGTH_SHORT).show();
         finish();
     }
