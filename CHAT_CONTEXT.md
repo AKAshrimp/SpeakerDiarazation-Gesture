@@ -2,6 +2,13 @@
 
 這份文件是為了「下次開新對話」能快速讓助理理解：我們做了什麼、目前專案長什麼樣、接下來要改什麼。
 
+## GitHub / 版本控管（重要）
+
+- GitHub Repo：`https://github.com/AKAshrimp/SpeakerDiarazation-Gesture.git`
+- 這個 repo 只包含「可編譯的主工程」內容（`settings.gradle.kts` + `:app` + `:gesture`）。
+- **安全性**：`app/src/main/res/raw/config.json` 內含 Speechmatics API key，已加入 `.gitignore`，不會被提交。
+  - 新機器 clone 後請照 `README.md`：複製 `app/src/main/res/raw/config_example.json` → `config.json`，再填入 API key。
+
 ## 專案目標（你要做的 Demo）
 
 - 面向聽障/聽損情境：把周遭對話即時轉成「可閱讀」字幕。
@@ -15,10 +22,10 @@
 
 ## 目前目錄/模組結構（很重要）
 
-請在 Android Studio 打開：`SpeakerDiarazationDemo/`（裡面有 `settings.gradle.kts`）。
+請在 Android Studio 打開「專案根目錄」（裡面有 `settings.gradle.kts`）。
 
-- `:app`（Java）：`SpeakerDiarazationDemo/app`
-- `:gesture`（Kotlin Library）：`SpeakerDiarazationDemo/gesture`
+- `:app`（Java）：`app/`
+- `:gesture`（Kotlin Library）：`gesture/`
 
 > 不需要把 gesture 包著 speaker 之類的巢狀結構；目前已是乾淨的 multi-module。
 
@@ -31,14 +38,15 @@
 - 右下角浮層：顯示最新手勢（例如 `手勢：good`），**5 秒沒更新自動淡出隱藏**。
 - 頂部固定狀態列（不會滾走）：顯示 `連線中 / 錄音中 / 暫停` 與 `手勢播報中` 等狀態。
 - Partial 顯示：不混在說話者對話中，單獨一行灰色斜體：`（正在說話：...）`（繁體）。
+- 字體大小：可在設定頁調整（24–48），主畫面字幕會跟著變大/變小；**錄音時也會顯示目前字體大小**（`字體：xx`）。
 
 ## 手勢模組整合（背景辨識）
 
 背景手勢辨識入口：
-- `SpeakerDiarazationDemo/gesture/src/main/java/com/google/mediapipe/examples/gesturerecognizer/GestureBackgroundRunner.kt`
+- `gesture/src/main/java/com/google/mediapipe/examples/gesturerecognizer/GestureBackgroundRunner.kt`
 
 主 App 接入點（Java）：
-- `SpeakerDiarazationDemo/app/src/main/java/hk/edu/hkmu/speakerdiarazationdemo/MainActivity.java`
+- `app/src/main/java/hk/edu/hkmu/speakerdiarazationdemo/MainActivity.java`
   - `startGestureIfEnabled()` / `stopGesture()`
 
 ### 為什麼整合後「感覺沒原版準」？
@@ -69,7 +77,7 @@
 
 設定頁支援（眼鏡找不到系統 TTS 設定入口時）：
 - 可選擇 TTS 引擎、打開語音資料安裝頁、與一鍵 TTS 測試。
-  - `SpeakerDiarazationDemo/app/src/main/java/hk/edu/hkmu/speakerdiarazationdemo/SettingsActivity.java`
+  - `app/src/main/java/hk/edu/hkmu/speakerdiarazationdemo/SettingsActivity.java`
 
 ## 繁體化（UI 字串）
 
@@ -81,15 +89,20 @@
 
 ## 文件（已更新）
 
-- 根目錄：`README.md`（已改成「聲之形眼鏡」總覽）
-- `SpeakerDiarazationDemo/README.md`（主工程說明）
-- `SpeakerDiarazationDemo/GESTURE_INTEGRATION.md`（手勢+STT 聯動說明，繁體）
-- `VOICE_OUTPUT_ANALYSIS.md`（TTS 現況與設計備忘，已更新為「目前有 TTS」）
+- `README.md`（主工程說明與安全設定檔方式）
+- `GESTURE_INTEGRATION.md`（手勢+STT 聯動說明，繁體）
+- `VOICE_OUTPUT_ANALYSIS.md`（TTS 現況與設計備忘）
+- `CHAT_CONTEXT.md`（本文件）
 
 ## 建置/驗證
 
-- 編譯命令（Windows / PowerShell）：在 `SpeakerDiarazationDemo/` 內執行
+- 編譯命令（Windows / PowerShell）：在專案根目錄執行
   - `.\gradlew.bat :app:assembleDebug`
+
+## 常見踩坑（避免再遇到）
+
+- Android `res/raw` 檔名不能有 `.`：只能用小寫 `a-z`、數字 `0-9`、底線 `_`。
+  - 所以範例檔命名為 `config_example.json`（不是 `config.example.json`）。
 
 ## 下次想繼續優化的方向（TODO）
 
@@ -97,4 +110,3 @@
 2. 手勢「認背景」再降低：要求必須有 hand landmarks/presence 高於門檻才 emit（目前已用 score 門檻 + 穩定幀數）。
 3. 把 `:gesture` 原版 UI 的英文做繁體化（新增 `values-zh-rHK`）。
 4. 如果眼鏡偶發 TTS queued 很久：加「TTS warm-up 讀一個空白/極短詞」或改 AudioFocus 行為（需依裝置實測）。
-
