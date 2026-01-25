@@ -71,10 +71,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout layoutRecordingControls;
     private Button btnRecord;
     private ImageButton btnSettings;
-    private TextView tvTranscript;
     private ScrollView scrollView;
     private Spinner spinnerLanguage;
-    private TextView tvTranscriptLabel;
     private Button btnPauseRecording;
     private Button btnStopRecording;
     private TextView tvRecordingFontSize;
@@ -111,11 +109,8 @@ public class MainActivity extends AppCompatActivity {
     private Map<String, Integer> speakerColors = new HashMap<>();
     private final List<EnrolledSpeaker> activeEnrolledSpeakers = new ArrayList<>();
     private final Set<String> mutedSpeakerTokens = new HashSet<>();
-    private final SpannableStringBuilder transcriptBuilder = new SpannableStringBuilder();
     private String lastDisplayedSpeaker = null;
     private String partialSpeaker = null;
-    private int partialStartIndex = -1;
-    private int partialTextStart = -1;
     
     private static final LanguageOption[] LANGUAGE_OPTIONS = new LanguageOption[] {
         new LanguageOption("cmn_en", "中英雙語 (cmn_en)"),
@@ -154,8 +149,6 @@ public class MainActivity extends AppCompatActivity {
         layoutRecordingControls = findViewById(R.id.layoutRecordingControls);
         btnRecord = findViewById(R.id.btnRecord);
         btnSettings = findViewById(R.id.btnSettings);
-        tvTranscript = findViewById(R.id.tvTranscript);
-        tvTranscriptLabel = findViewById(R.id.tvTranscriptLabel);
         scrollView = findViewById(R.id.scrollView);
         spinnerLanguage = findViewById(R.id.spinnerLanguage);
         btnPauseRecording = findViewById(R.id.btnPauseRecording);
@@ -312,33 +305,29 @@ public class MainActivity extends AppCompatActivity {
             if (layoutControls != null) {
                 layoutControls.setVisibility(View.GONE);
             }
-            if (tvTranscriptLabel != null) {
-                tvTranscriptLabel.setVisibility(View.GONE);
-            }
             if (layoutRecordingControls != null) {
                 layoutRecordingControls.setVisibility(View.VISIBLE);
             }
+            if (scrollView != null) {
+                scrollView.setVisibility(View.VISIBLE);
+                scrollView.setBackgroundColor(Color.BLACK);
+            }
             if (rootContainer != null) {
                 rootContainer.setBackgroundColor(Color.BLACK);
-            }
-            if (scrollView != null) {
-                scrollView.setBackgroundColor(Color.BLACK);
             }
         } else {
             if (layoutControls != null) {
                 layoutControls.setVisibility(View.VISIBLE);
             }
-            if (tvTranscriptLabel != null) {
-                tvTranscriptLabel.setVisibility(View.VISIBLE);
-            }
             if (layoutRecordingControls != null) {
                 layoutRecordingControls.setVisibility(View.GONE);
             }
+            if (scrollView != null) {
+                scrollView.setVisibility(View.GONE);
+                scrollView.setBackgroundColor(Color.parseColor("#2E2E2E"));
+            }
             if (rootContainer != null) {
                 rootContainer.setBackgroundColor(Color.parseColor("#1E1E1E"));
-            }
-            if (scrollView != null) {
-                scrollView.setBackgroundColor(Color.parseColor("#2E2E2E"));
             }
         }
 
@@ -347,9 +336,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void applyFontSize() {
         float fontSize = getSavedFontSize();
-        if (tvTranscript != null) {
-            tvTranscript.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSize);
-        }
+        // 字体大小会在创建 view 时应用
         if (tvRecordingFontSize != null) {
             tvRecordingFontSize.setText(String.format(Locale.getDefault(), "字體：%.0f", fontSize));
         }
@@ -881,12 +868,15 @@ public class MainActivity extends AppCompatActivity {
         isPaused = false;
         sttConnected = false;
         btnRecord.setEnabled(false);
-        transcriptBuilder.clear();
         lastDisplayedSpeaker = null;
-        tvTranscript.setText("");
         partialSpeaker = null;
-        partialStartIndex = -1;
-        partialTextStart = -1;
+        
+        // 清空 ScrollView 的内容
+        LinearLayout scrollContent = (LinearLayout) scrollView.getChildAt(0);
+        if (scrollContent != null) {
+            scrollContent.removeAllViews();
+        }
+        
         updateRecordingUi(true);
         refreshPauseButtonState();
         updateStatusChip();
@@ -895,8 +885,8 @@ public class MainActivity extends AppCompatActivity {
 
         transcriptManager = new TranscriptManager(this, config, new TranscriptManager.TranscriptCallback() {
             @Override
-            public void onTranscriptUpdate(TranscriptResult result) {
-                runOnUiThread(() -> appendTranscript(result));
+            public void onTranscriptUpdate(TranscriptResult result, boolean shouldAppend) {
+                runOnUiThread(() -> appendTranscript(result, shouldAppend));
             }
 
             @Override
@@ -922,8 +912,6 @@ public class MainActivity extends AppCompatActivity {
                             sttConnected = true;
                             btnRecord.setEnabled(true);
                             partialSpeaker = null;
-                            partialStartIndex = -1;
-                            partialTextStart = -1;
                             if (!isPaused) {
                                 startAudioRecording();
                             }
@@ -1067,8 +1055,6 @@ public class MainActivity extends AppCompatActivity {
         btnRecord.setText("開始錄音");
         btnRecord.setEnabled(true);
         partialSpeaker = null;
-        partialStartIndex = -1;
-        partialTextStart = -1;
         updateRecordingUi(false);
         refreshPauseButtonState();
         updateStatusChip();
@@ -1099,7 +1085,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "Recording stopped");
     }
 
-    private void appendTranscript(TranscriptResult result) {
+    private void appendTranscript(TranscriptResult result, boolean shouldAppend) {
         String speakerName = result.getSpeaker();
         String content = result.getText();
         if (content == null || content.trim().isEmpty()) {
@@ -1110,23 +1096,104 @@ public class MainActivity extends AppCompatActivity {
 
         int color = speakerColors.getOrDefault(speakerName, Color.WHITE);
 
-        if (transcriptBuilder.length() > 0) {
-            transcriptBuilder.append("\n");
+        if (shouldAppend && lastDisplayedSpeaker != null && lastDisplayedSpeaker.equals(speakerName)) {
+            // 追加模式：找到最后一个 transcript 框并在其内追加内容
+            LinearLayout scrollContent = (LinearLayout) scrollView.getChildAt(0);
+            if (scrollContent != null && scrollContent.getChildCount() > 0) {
+                // 获取 scrollContent 的最后一个子视图（最后一个框框）
+                View lastChild = scrollContent.getChildAt(scrollContent.getChildCount() - 1);
+                if (lastChild instanceof LinearLayout) {
+                    LinearLayout lastContainer = (LinearLayout) lastChild;
+                    TextView lastTextView = (TextView) lastContainer.getTag(R.id.transcript_text_view);
+                    if (lastTextView != null) {
+                        CharSequence currentText = lastTextView.getText();
+                        String newText = currentText + " " + content.trim();
+                        lastTextView.setText(newText);
+                        lastDisplayedSpeaker = speakerName;
+                        scrollView.post(() -> scrollView.fullScroll(View.FOCUS_DOWN));
+                        return;
+                    }
+                }
+            }
         }
-        int start = transcriptBuilder.length();
-        transcriptBuilder.append(speakerName).append("：").append(content.trim());
-        transcriptBuilder.setSpan(
-            new ForegroundColorSpan(color),
-            start,
-            transcriptBuilder.length(),
-            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+
+        // 创建新的框框
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.HORIZONTAL);
+        container.setPadding(dpToPx(12), dpToPx(8), dpToPx(12), dpToPx(8));
+        container.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        
+        // 半透明灰色背景（微信风格）
+        int bgColor = Color.parseColor("#E6404040"); // 40% 透明度的灰色
+        container.setBackgroundColor(bgColor);
+        
+        // 圆角（微信风格，不要太圆）
+        float cornerRadius = dpToPx(6);
+        container.setElevation(0);
+        
+        // 使用 GradientDrawable 实现圆角
+        android.graphics.drawable.GradientDrawable drawable = new android.graphics.drawable.GradientDrawable();
+        drawable.setColor(bgColor);
+        drawable.setCornerRadius(cornerRadius);
+        container.setBackground(drawable);
+        
+        // 底部边距
+        LinearLayout.LayoutParams containerParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
         );
+        containerParams.setMargins(0, 0, 0, dpToPx(8));
+        container.setLayoutParams(containerParams);
+
+        // 说话者标签
+        TextView speakerLabel = new TextView(this);
+        speakerLabel.setText(speakerName + "：");
+        speakerLabel.setTextColor(color);
+        speakerLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, getSavedFontSize());
+        speakerLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        LinearLayout.LayoutParams speakerParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        speakerParams.setMargins(0, 0, dpToPx(4), 0);
+        speakerLabel.setLayoutParams(speakerParams);
+
+        // 内容文字
+        TextView contentView = new TextView(this);
+        contentView.setText(content.trim());
+        contentView.setTextColor(Color.WHITE);
+        contentView.setTextSize(TypedValue.COMPLEX_UNIT_SP, getSavedFontSize());
+        contentView.setId(R.id.transcript_text_view);
+        LinearLayout.LayoutParams contentParams = new LinearLayout.LayoutParams(
+            0,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            1.0f
+        );
+        contentView.setLayoutParams(contentParams);
+
+        container.addView(speakerLabel);
+        container.addView(contentView);
+        container.setTag(R.id.transcript_text_view, contentView);
+
+        // 添加到 ScrollView
+        LinearLayout scrollContent = (LinearLayout) scrollView.getChildAt(0);
+        if (scrollContent == null) {
+            scrollContent = new LinearLayout(this);
+            scrollContent.setOrientation(LinearLayout.VERTICAL);
+            scrollContent.setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(140));
+            scrollView.addView(scrollContent);
+        }
+        scrollContent.addView(container);
 
         lastDisplayedSpeaker = speakerName;
-        tvTranscript.setText(transcriptBuilder);
-
+        
         // Auto scroll to bottom
         scrollView.post(() -> scrollView.fullScroll(View.FOCUS_DOWN));
+    }
+
+    private int dpToPx(int dp) {
+        float density = getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
     }
 
     private void displayPartial(String speakerName, String text) {
@@ -1139,54 +1206,69 @@ public class MainActivity extends AppCompatActivity {
         String partialText = "（正在說話：" + trimmed + "）";
         int partialColor = Color.parseColor("#B0B0B0");
 
-        if (partialStartIndex >= 0) {
+        LinearLayout scrollContent = (LinearLayout) scrollView.getChildAt(0);
+        if (scrollContent == null) {
+            scrollContent = new LinearLayout(this);
+            scrollContent.setOrientation(LinearLayout.VERTICAL);
+            scrollContent.setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(140));
+            scrollView.addView(scrollContent);
+        }
+
+        // 查找是否已有 partial view
+        View existingPartial = scrollContent.findViewWithTag(R.id.partial_text_view);
+        
+        if (existingPartial != null && existingPartial instanceof TextView) {
+            // 更新现有的 partial
             if (partialSpeaker != null && partialSpeaker.equals(speakerName)) {
-                transcriptBuilder.replace(partialTextStart, transcriptBuilder.length(), partialText);
-                for (Object span : transcriptBuilder.getSpans(partialTextStart, transcriptBuilder.length(), Object.class)) {
-                    transcriptBuilder.removeSpan(span);
-                }
-                transcriptBuilder.setSpan(new ForegroundColorSpan(partialColor), partialTextStart, transcriptBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                transcriptBuilder.setSpan(new StyleSpan(Typeface.ITALIC), partialTextStart, transcriptBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                partialSpeaker = speakerName;
-                tvTranscript.setText(transcriptBuilder);
-                scrollView.post(() -> scrollView.fullScroll(View.FOCUS_DOWN));
-                return;
+                ((TextView) existingPartial).setText(partialText);
             } else {
-                removePartial();
+                // 不同说话者，移除旧的，创建新的
+                scrollContent.removeView(existingPartial);
+                createPartialView(scrollContent, partialText, partialColor);
             }
+        } else {
+            // 创建新的 partial view
+            createPartialView(scrollContent, partialText, partialColor);
         }
-
-        if (partialStartIndex < 0) {
-            partialStartIndex = transcriptBuilder.length();
-            if (transcriptBuilder.length() > 0) {
-                transcriptBuilder.append("\n");
-            }
-
-            partialTextStart = transcriptBuilder.length();
-            transcriptBuilder.append(partialText);
-            partialSpeaker = speakerName;
-            transcriptBuilder.setSpan(new ForegroundColorSpan(partialColor), partialTextStart, transcriptBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            transcriptBuilder.setSpan(new StyleSpan(Typeface.ITALIC), partialTextStart, transcriptBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-
-        tvTranscript.setText(transcriptBuilder);
+        
+        partialSpeaker = speakerName;
         scrollView.post(() -> scrollView.fullScroll(View.FOCUS_DOWN));
     }
 
+    private void createPartialView(LinearLayout parent, String text, int color) {
+        TextView partialView = new TextView(this);
+        partialView.setText(text);
+        partialView.setTextColor(color);
+        partialView.setTextSize(TypedValue.COMPLEX_UNIT_SP, getSavedFontSize() * 0.9f);
+        partialView.setTypeface(Typeface.defaultFromStyle(Typeface.ITALIC));
+        partialView.setTag(R.id.partial_text_view);
+        partialView.setPadding(dpToPx(12), dpToPx(4), dpToPx(12), dpToPx(4));
+        
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, dpToPx(4), 0, dpToPx(4));
+        partialView.setLayoutParams(params);
+        
+        parent.addView(partialView);
+    }
+
     private void clearPartialDisplay(String speakerName) {
-        if (partialStartIndex >= 0 && (partialSpeaker == null || partialSpeaker.equals(speakerName))) {
+        if (partialSpeaker == null || partialSpeaker.equals(speakerName)) {
             removePartial();
         }
     }
 
     private void removePartial() {
-        if (partialStartIndex >= 0) {
-            transcriptBuilder.delete(partialStartIndex, transcriptBuilder.length());
-            partialStartIndex = -1;
-            partialTextStart = -1;
-            partialSpeaker = null;
-            tvTranscript.setText(transcriptBuilder);
+        LinearLayout scrollContent = (LinearLayout) scrollView.getChildAt(0);
+        if (scrollContent != null) {
+            View existingPartial = scrollContent.findViewWithTag(R.id.partial_text_view);
+            if (existingPartial != null) {
+                scrollContent.removeView(existingPartial);
+            }
         }
+        partialSpeaker = null;
     }
 
     @Override

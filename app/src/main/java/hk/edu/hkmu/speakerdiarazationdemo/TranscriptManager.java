@@ -32,9 +32,15 @@ public class TranscriptManager {
 
     private String lastSpeaker = null;
     private String partialSpeakerId = null;
+    private long lastOutputTime = 0L;
+    private boolean lastOutputEndsWithPunctuation = false; // 上一次输出是否以标点结尾
+    private int lastOutputLength = 0; // 上一次输出的字符数
+    private int accumulatedLength = 0; // 累积的字符数（用于30字换行判断）
+    private static final long SAME_SPEAKER_APPEND_WINDOW_MS = 10000L; // 10秒
+    private static final int MAX_CHARS_BEFORE_SPLIT = 30; // 30个字后如果遇到句号/问号就换行
 
     public interface TranscriptCallback {
-        void onTranscriptUpdate(TranscriptResult result);
+        void onTranscriptUpdate(TranscriptResult result, boolean shouldAppend);
         void onPartialTranscript(String speakerName, String text);
         void onPartialTranscriptCleared(String speakerName);
     }
@@ -110,10 +116,11 @@ public class TranscriptManager {
                          JsonObject rawResult) {
         String normalizedSpeaker = (speaker == null || speaker.trim().isEmpty()) ? DEFAULT_SPEAKER : speaker;
 
+        // 如果是不同说话者，先输出上一个说话者的 buffer
         if (lastSpeaker != null && !normalizedSpeaker.equals(lastSpeaker)) {
             SpeakerBuffer previousBuffer = bufferBySpeaker.get(lastSpeaker);
             if (previousBuffer != null && !previousBuffer.isBlank()) {
-                outputSpeakerText(lastSpeaker);
+                outputSpeakerText(lastSpeaker, false);
             }
         }
 
@@ -128,7 +135,7 @@ public class TranscriptManager {
 
         if ("speaker_change".equals(resultType)) {
             if (!buffer.isBlank()) {
-                outputSpeakerText(normalizedSpeaker);
+                outputSpeakerText(normalizedSpeaker, false);
             }
             lastSpeaker = normalizedSpeaker;
             return;
@@ -146,11 +153,16 @@ public class TranscriptManager {
         boolean shouldOutput = false;
         if (!tokenText.isEmpty()) {
             buffer.addToken(new Token(tokenType, tokenText));
-            shouldOutput = isEos || isFinalResult || shouldFlushOnPunctuation(tokenType, tokenText);
+            // 改为：只有 isEos 或 isFinalResult 才输出，去掉标点符号触发
+            shouldOutput = isEos || isFinalResult;
+            Log.d(TAG, "检查shouldOutput: isEos=" + isEos + ", isFinalResult=" + isFinalResult + ", shouldOutput=" + shouldOutput);
         }
 
         if (shouldOutput) {
-            outputSpeakerText(normalizedSpeaker);
+            // 判断是否应该追加到上一段
+            boolean shouldAppend = shouldAppendToLastSegment(normalizedSpeaker, tokenType, tokenText);
+            Log.d(TAG, "调用outputSpeakerText: speaker=" + normalizedSpeaker + ", shouldAppend=" + shouldAppend);
+            outputSpeakerText(normalizedSpeaker, shouldAppend);
         }
 
         lastSpeaker = normalizedSpeaker;
@@ -159,7 +171,7 @@ public class TranscriptManager {
         }
     }
 
-    private void outputSpeakerText(String speaker) {
+    private void outputSpeakerText(String speaker, boolean shouldAppend) {
         SpeakerBuffer buffer = bufferBySpeaker.get(speaker);
         if (buffer == null) {
             return;
@@ -179,11 +191,36 @@ public class TranscriptManager {
 
         if (callback != null) {
             callback.onPartialTranscriptCleared(speakerName);
-            callback.onTranscriptUpdate(result);
+            callback.onTranscriptUpdate(result, shouldAppend);
         }
 
         buffer.clear();
-        Log.d(TAG, "Output: " + result.toString());
+        lastOutputTime = System.currentTimeMillis();
+
+        // 检查输出的文本是否以标点结尾，并更新累积长度
+        if (fullText.length() > 0) {
+            char lastChar = fullText.charAt(fullText.length() - 1);
+            lastOutputEndsWithPunctuation = (lastChar == '。' || lastChar == '？' || lastChar == '！' || lastChar == '.' || lastChar == '?' || lastChar == '!');
+            lastOutputLength = fullText.length();
+            
+            // 更新累积长度
+            if (shouldAppend) {
+                // 追加模式：累加长度
+                accumulatedLength += fullText.length();
+            } else {
+                // 新段模式：重置累积长度
+                accumulatedLength = fullText.length();
+            }
+            
+            Log.d(TAG, "Output: " + result.toString() + (shouldAppend ? " (append)" : " (new)") +
+                      ", endsWithPunctuation: " + lastOutputEndsWithPunctuation + 
+                      ", length: " + lastOutputLength + ", accumulatedLength: " + accumulatedLength);
+        } else {
+            lastOutputEndsWithPunctuation = false;
+            lastOutputLength = 0;
+            accumulatedLength = 0;
+            Log.d(TAG, "Output: " + result.toString() + (shouldAppend ? " (append)" : " (new)"));
+        }
 
         if (partialSpeakerId != null && partialSpeakerId.equals(speaker)) {
             partialSpeakerId = null;
@@ -192,14 +229,17 @@ public class TranscriptManager {
 
     public void flush() {
         for (String speaker : new ArrayList<>(bufferBySpeaker.keySet())) {
-            outputSpeakerText(speaker);
+            outputSpeakerText(speaker, false);
         }
         partialSpeakerId = null;
     }
 
     public void handleEndOfUtterance() {
         if (lastSpeaker != null) {
-            outputSpeakerText(lastSpeaker);
+            // 使用 shouldAppendToLastSegment 判断是否追加
+            boolean shouldAppend = shouldAppendToLastSegment(lastSpeaker, null, null);
+            Log.d(TAG, "handleEndOfUtterance: speaker=" + lastSpeaker + ", shouldAppend=" + shouldAppend);
+            outputSpeakerText(lastSpeaker, shouldAppend);
         } else {
             flush();
         }
@@ -212,6 +252,41 @@ public class TranscriptManager {
         }
         char lastChar = tokenText.charAt(tokenText.length() - 1);
         return isSentenceEndingPunctuation(lastChar);
+    }
+
+    private boolean shouldAppendToLastSegment(String speaker, TokenType tokenType, String tokenText) {
+        Log.d(TAG, "shouldAppend判断: speaker=" + speaker + ", lastSpeaker=" + lastSpeaker + 
+                   ", accumulatedLength=" + accumulatedLength +
+                   ", lastOutputEndsWithPunctuation=" + lastOutputEndsWithPunctuation +
+                   ", timeSinceLastOutput=" + (System.currentTimeMillis() - lastOutputTime) + "ms");
+
+        // 第一次输出，没有上一段
+        if (lastSpeaker == null) {
+            Log.d(TAG, "shouldAppend=false: 第一次输出");
+            return false;
+        }
+
+        // 不同说话者
+        if (!speaker.equals(lastSpeaker)) {
+            Log.d(TAG, "shouldAppend=false: 不同说话者");
+            return false;
+        }
+
+        // 超过10秒
+        long timeSinceLastOutput = System.currentTimeMillis() - lastOutputTime;
+        if (timeSinceLastOutput > SAME_SPEAKER_APPEND_WINDOW_MS) {
+            Log.d(TAG, "shouldAppend=false: 超过10秒");
+            return false;
+        }
+
+        // 方案B：只有累积到30字+标点才换行
+        if (accumulatedLength >= MAX_CHARS_BEFORE_SPLIT && lastOutputEndsWithPunctuation) {
+            Log.d(TAG, "shouldAppend=false: 累积" + accumulatedLength + "字+标点，开新段");
+            return false;
+        }
+
+        Log.d(TAG, "shouldAppend=true: 追加");
+        return true;
     }
 
     private void handleSelfCorrection(SpeakerBuffer buffer, JsonObject rawResult) {
