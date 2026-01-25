@@ -1,5 +1,4 @@
-# 聲之形眼鏡（PhonoForm Glasses）
-
+# 字幕眼鏡
 面向聽障/聽損情境的 Android Demo：即時語者分離（Speaker Diarization）與語音轉寫（STT），將周遭對話以字幕方式輸出並以色彩區分不同說話者；可選擇在背景同步啟用手勢辨識與手勢播報（TTS）。
 
 ## Android API 等級
