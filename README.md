@@ -1,57 +1,67 @@
 # 字幕眼鏡
-面向聽障/聽損情境的 Android Demo：即時語者分離（Speaker Diarization）與語音轉寫（STT），將周遭對話以字幕方式輸出並以色彩區分不同說話者；可選擇在背景同步啟用手勢辨識與手勢播報（TTS）。
 
-## Android API 等級
+這是一個 Android Demo，用來測試「字幕眼鏡」的基本流程：麥克風收音後送到 Speechmatics 做即時語音轉文字和語者分離，再把不同說話者的內容用字幕顯示出來。專案也整合了手勢辨識模組，可以在錄音時背景偵測手勢並用 TTS 播報。
 
-專案的 Android SDK 設定如下，供確認相容性與上架要求：
-
-- `compileSdk = 36`（對應 Android 15 / API Level 36，仍為預覽版）
-- `targetSdk = 28`（對應 Android 9 Pie / API Level 28）
-- `minSdk = 28`（最低支援 Android 9 Pie）
-- Java 11 相容編譯選項
-
-> 如需上架 Google Play，建議依實際需求更新 `targetSdk` 以符合最新規範。
-
-## 建置需求
-
-- Android Studio Jellyfish (或以上) 搭配 Android Gradle Plugin 8.1+
-- 已安裝 Android API Level 28 及 36 的 SDK 元件
-- JDK 11
-
-## 快速開始
-
-1. 複製專案後，於 Android Studio 開啟專案根目錄（本資料夾，內含 `settings.gradle.kts`）。
-2. 建立 Speechmatics 設定檔（請勿提交 API key）：
-   - 複製 `app/src/main/res/raw/config_example.json` → `app/src/main/res/raw/config.json`
-   - 填入 Speechmatics 帳戶對應的 `api_key` 與其他參數
-3. 透過工具列同步 Gradle，確認所有依賴成功下載。
-4. 以 `Run > Run 'app'` 或在終端執行 `./gradlew assembleDebug` 建構 APK。
-
-應用程式首次啟動會請求麥克風權限；授權後即可開始錄音與即時辨識。
+![INMO Air 3 smart glasses](inmoair3.png)
 
 ## 主要功能
 
-- 以 `AudioRecord` 擷取 16 kHz 單聲道音訊並串流至 Speechmatics WebSocket。
-- 透過 `TranscriptManager` 處理語者標記、超時合併與字幕排版。
-- 可於設定頁面調整語言、字體大小（24–48）、TTS 引擎與輸出選項。
-- 支援將完整辨識內容寫入內部儲存的文字檔案。
-- 可選擇在錄音時同步啟用手勢辨識（背景運行、不顯示相機畫面），右下角顯示最新手勢並可播報。
+- 即時錄音，將 16 kHz 單聲道音訊串流到 Speechmatics WebSocket。
+- 顯示語音轉寫結果，並用不同顏色區分說話者。
+- 可在設定頁調整語言、字體大小、TTS 引擎和輸出選項。
+- 可把完整辨識內容儲存成文字檔。
+- 可選擇在錄音時同步啟用手勢辨識，右下角會顯示最新手勢，也可以播報結果。
 
-## 更換/自訂手勢模型（進階）
+## 建置需求
 
-若你重新訓練了 MediaPipe 手勢模型，只需要在本專案替換模型資產檔即可：
+- Android Studio Jellyfish 或以上
+- Android Gradle Plugin 8.1+
+- Android SDK API Level 28 和 36
+- JDK 11
 
-- 將新模型覆蓋 `gesture/src/main/assets/gesture_recognizer.task`
+目前專案設定：
 
-> 訓練資料與訓練流程通常不會放在 Android 專案內；Android 端只負責載入 `.task`。
+- `compileSdk = 36`
+- `targetSdk = 28`
+- `minSdk = 28`
 
-整合細節請參考：
-- `GESTURE_INTEGRATION.md`
-- `VOICE_OUTPUT_ANALYSIS.md`
-- `CHAT_CONTEXT.md`（下次續接對話用）
+## Speechmatics API key 設定
 
-## 後續延伸建議
+真實 API key 不要放進 GitHub。這個專案會讀取本機的 `config.json`，而這個檔案已經被 `.gitignore` 排除。
 
-- 將 `targetSdk` 更新至最新穩定版本以符合 Play Console 要求。
-- 新增儀器測試覆蓋更多 UI 情境。
-- 視情況導入 Kotlin 或 Jetpack Compose 以改善可維護性。
+1. 複製範例設定檔：
+
+   ```powershell
+   Copy-Item app/src/main/res/raw/config_example.json app/src/main/res/raw/config.json
+   ```
+
+   macOS 或 Linux 可用：
+
+   ```bash
+   cp app/src/main/res/raw/config_example.json app/src/main/res/raw/config.json
+   ```
+
+2. 打開 `app/src/main/res/raw/config.json`，把 `api_key` 改成你的 Speechmatics API key。
+3. 如有需要，再調整 `language`、`region`、`max_speakers` 等設定。
+4. 不要用 `git add -f app/src/main/res/raw/config.json`，否則真實 key 會被強制提交。
+
+## 快速開始
+
+1. 用 Android Studio 開啟專案根目錄，也就是含有 `settings.gradle.kts` 的資料夾。
+2. 依照上方步驟建立 `config.json`。
+3. 等 Gradle Sync 完成。
+4. 用 Android Studio 執行 `app`，或在終端機執行：
+
+   ```bash
+   ./gradlew assembleDebug
+   ```
+
+App 首次啟動時會請求麥克風權限。授權後即可開始錄音和即時辨識。
+
+## 更換手勢模型
+
+如果重新訓練 MediaPipe 手勢模型，把新的模型覆蓋到這個位置即可：
+
+```text
+gesture/src/main/assets/gesture_recognizer.task
+```

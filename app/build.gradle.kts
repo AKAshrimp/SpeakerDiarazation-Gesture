@@ -29,6 +29,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+    packaging {
+        jniLibs {
+            // Work around 16 KB page-size / APK native-load alignment issues on some devices.
+            useLegacyPackaging = true
+        }
+    }
 }
 
 dependencies {

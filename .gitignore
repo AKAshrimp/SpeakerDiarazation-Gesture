@@ -1,22 +1,39 @@
+# IDE and local machine files
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-/.idea/
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.gradle/
+.kotlin/
+/.idea/
+/local.properties
 local.properties
 
-# Never commit Speechmatics API key.
-/app/src/main/res/raw/config.json
-
-# Ignore module build outputs (e.g. :gesture/build).
+# Android build outputs
+/build/
 **/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.hprof
+*.log
+
+# Local notes, generated reports, and backups
+/.factory/
+/explainFile/
+/gesture-backup/
+
+# Secrets and signing material
+.env
+.env.*
+*.jks
+*.keystore
+*.pem
+*.p12
+keystore.properties
+google-services.json
+secrets.properties
+
+# Never commit the real Speechmatics API key.
+/app/src/main/res/raw/config.json

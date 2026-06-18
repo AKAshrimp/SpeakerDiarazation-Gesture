@@ -38,14 +38,14 @@ class PermissionsFragment : Fragment() {
             if (isGranted) {
                 Toast.makeText(
                     context,
-                    "相機權限已授予",
+                    "Camera permission granted",
                     Toast.LENGTH_LONG
                 ).show()
                 navigateToCamera()
             } else {
                 Toast.makeText(
                     context,
-                    "相機權限被拒絕",
+                    "Camera permission denied",
                     Toast.LENGTH_LONG
                 ).show()
             }
