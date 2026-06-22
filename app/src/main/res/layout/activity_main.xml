@@ -88,7 +88,7 @@
                 android:background="@android:color/transparent"
                 android:padding="8dp"
                 android:src="@drawable/ic_settings"
-                android:tint="#FFFFFF"
+                app:tint="#FFFFFF"
                 android:contentDescription="設定"
                 android:focusable="true"
                 android:layout_marginStart="8dp" />

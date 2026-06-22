@@ -1,67 +1,213 @@
-# 字幕眼鏡
+<div align="center">
 
-這是一個 Android Demo，用來測試「字幕眼鏡」的基本流程：麥克風收音後送到 Speechmatics 做即時語音轉文字和語者分離，再把不同說話者的內容用字幕顯示出來。專案也整合了手勢辨識模組，可以在錄音時背景偵測手勢並用 TTS 播報。
+# 字幕眼鏡 Android Demo
+
+即時語音轉文字、語者分離、字幕顯示與手勢辨識的 Android 原型。
+
+![Android](https://img.shields.io/badge/Android-API%2028%2B-3DDC84?logo=android&logoColor=white)
+![Java](https://img.shields.io/badge/Java-11-blue)
+![Kotlin](https://img.shields.io/badge/Kotlin-2.1.0-7F52FF?logo=kotlin&logoColor=white)
+![Speechmatics](https://img.shields.io/badge/Speechmatics-Realtime-orange)
+![MediaPipe](https://img.shields.io/badge/MediaPipe-Gesture%20recognition-4285F4)
 
 ![INMO Air 3 smart glasses](inmoair3.png)
 
-## 主要功能
+[Overview](#overview) · [Features](#features) · [Quick start](#quick-start) · [Configuration](#configuration) · [Troubleshooting](#troubleshooting)
 
-- 即時錄音，將 16 kHz 單聲道音訊串流到 Speechmatics WebSocket。
-- 顯示語音轉寫結果，並用不同顏色區分說話者。
-- 可在設定頁調整語言、字體大小、TTS 引擎和輸出選項。
-- 可把完整辨識內容儲存成文字檔。
-- 可選擇在錄音時同步啟用手勢辨識，右下角會顯示最新手勢，也可以播報結果。
+</div>
 
-## 建置需求
+---
 
-- Android Studio Jellyfish 或以上
-- Android Gradle Plugin 8.1+
-- Android SDK API Level 28 和 36
+## Overview
+
+This project is an Android demo for a smart-glasses-style subtitle workflow. It records microphone audio, streams it to Speechmatics for real-time transcription and speaker diarization, then displays the transcript with speaker labels and colors.
+
+The app also integrates a separate MediaPipe gesture-recognition module. While recording, gesture detection can run in the background and optionally announce gesture results through Android Text-to-Speech.
+
+## Features
+
+| Feature | What it does | Main files |
+| --- | --- | --- |
+| Real-time transcription | Streams 16 kHz mono microphone audio to Speechmatics WebSocket | `AudioRecorder.java`, `SpeechmaticsClient.java` |
+| Speaker diarization | Separates speakers and maps labels such as `S1`, `S2`, `S3` | `SpeechmaticsClient.java`, `AppConfig.java` |
+| Speaker enrollment | Records local samples and calls Speechmatics speaker enrollment APIs | `SpeakerEnrollmentActivity.java`, `SpeechmaticsEnrollmentClient.java` |
+| Subtitle display | Shows transcript text with speaker color separation | `MainActivity.java`, `TranscriptListAdapter.java` |
+| Transcript management | Saves, lists, renames, deletes and reloads transcript text files | `TranscriptManager.java`, `SettingsActivity.java` |
+| Gesture recognition | Runs MediaPipe gesture recognition from the `:gesture` module | `gesture/src/main/java/.../GestureBackgroundRunner.kt` |
+| Text-to-Speech | Announces gesture output or other configured results | `MainActivity.java`, `SettingsActivity.java` |
+| Settings screen | Adjusts language, font size, TTS engine, speaker names and output behavior | `SettingsActivity.java` |
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Mic[Microphone] --> Recorder[AudioRecorder]
+    Recorder --> Speechmatics[Speechmatics realtime WebSocket]
+    Speechmatics --> Client[SpeechmaticsClient]
+    Client --> UI[MainActivity subtitles]
+    UI --> Transcripts[Local transcript files]
+
+    Camera[Camera] --> Gesture[MediaPipe gesture module]
+    Gesture --> Overlay[Gesture status overlay]
+    Gesture --> TTS[Android Text-to-Speech]
+```
+
+## Tech stack
+
+| Area | Technology |
+| --- | --- |
+| App platform | Android app module `:app` |
+| Gesture module | Android library module `:gesture` |
+| Languages | Java 11, Kotlin 2.1.0 |
+| Build system | Gradle, Android Gradle Plugin 8.13.0 |
+| Speech API | Speechmatics real-time WebSocket and speaker APIs |
+| Networking | OkHttp 4.10.0 |
+| JSON parsing | Gson 2.10.1 |
+| UI | AppCompat, Material Components, ConstraintLayout |
+| Camera and gestures | CameraX 1.4.2, MediaPipe Tasks Vision 0.10.29 |
+
+## Project structure
+
+```text
+.
+├── app/                         # Main Android app
+│   └── src/main/
+│       ├── java/hk/edu/hkmu/speakerdiarazationdemo/
+│       └── res/raw/
+│           ├── config_example.json
+│           └── config.json      # Local only, ignored by Git
+├── gesture/                     # MediaPipe gesture-recognition library module
+│   └── src/main/assets/
+│       └── gesture_recognizer.task
+├── gradle/libs.versions.toml    # Version catalog
+├── settings.gradle.kts          # Includes :app and :gesture
+└── inmoair3.png                 # README image
+```
+
+## Requirements
+
+- Android Studio with Android Gradle Plugin 8.13.0 support
 - JDK 11
+- Android SDK:
+  - `compileSdk = 36`
+  - `minSdk = 28`
+  - `targetSdk = 28`
+- A Speechmatics API key
+- Android device or emulator with microphone permission
+- Camera permission and camera hardware for gesture mode
 
-目前專案設定：
+## Configuration
 
-- `compileSdk = 36`
-- `targetSdk = 28`
-- `minSdk = 28`
+The app reads `app/src/main/res/raw/config.json` at runtime. This file contains your real Speechmatics API key and is intentionally ignored by Git.
 
-## Speechmatics API key 設定
+Copy the safe example first:
 
-真實 API key 不要放進 GitHub。這個專案會讀取本機的 `config.json`，而這個檔案已經被 `.gitignore` 排除。
+```powershell
+Copy-Item app/src/main/res/raw/config_example.json app/src/main/res/raw/config.json
+```
 
-1. 複製範例設定檔：
+macOS or Linux:
 
-   ```powershell
-   Copy-Item app/src/main/res/raw/config_example.json app/src/main/res/raw/config.json
-   ```
+```bash
+cp app/src/main/res/raw/config_example.json app/src/main/res/raw/config.json
+```
 
-   macOS 或 Linux 可用：
+Then edit `app/src/main/res/raw/config.json`:
 
-   ```bash
-   cp app/src/main/res/raw/config_example.json app/src/main/res/raw/config.json
-   ```
+```json
+{
+  "api_key": "YOUR_SPEECHMATICS_API_KEY",
+  "language": "yue",
+  "region": "usa",
+  "timeout_seconds": 1.5,
+  "operating_point": "enhanced",
+  "max_delay_mode": "flexible",
+  "enable_partials": true,
+  "diarization": "speaker",
+  "max_speakers": 10,
+  "speaker_sensitivity": 0.6,
+  "end_of_utterance_silence_trigger": 0.8,
+  "audio_filter_volume_threshold": 0,
+  "speaker_names": {
+    "S1": "s1",
+    "S2": "s2",
+    "S3": "s3",
+    "S4": "s4",
+    "S5": "s5"
+  }
+}
+```
 
-2. 打開 `app/src/main/res/raw/config.json`，把 `api_key` 改成你的 Speechmatics API key。
-3. 如有需要，再調整 `language`、`region`、`max_speakers` 等設定。
-4. 不要用 `git add -f app/src/main/res/raw/config.json`，否則真實 key 會被強制提交。
+Important:
 
-## 快速開始
+- Never commit the real `config.json`.
+- Do not run `git add -f app/src/main/res/raw/config.json`.
+- Keep public examples using `YOUR_SPEECHMATICS_API_KEY`.
 
-1. 用 Android Studio 開啟專案根目錄，也就是含有 `settings.gradle.kts` 的資料夾。
-2. 依照上方步驟建立 `config.json`。
-3. 等 Gradle Sync 完成。
-4. 用 Android Studio 執行 `app`，或在終端機執行：
+## Quick start
 
-   ```bash
-   ./gradlew assembleDebug
-   ```
+1. Open this repository in Android Studio.
+2. Create `app/src/main/res/raw/config.json` from `config_example.json`.
+3. Add your Speechmatics API key locally.
+4. Run Gradle Sync.
+5. Build and install the app from Android Studio, or run:
 
-App 首次啟動時會請求麥克風權限。授權後即可開始錄音和即時辨識。
+```powershell
+.\gradlew.bat :app:assembleDebug
+```
 
-## 更換手勢模型
+On macOS or Linux:
 
-如果重新訓練 MediaPipe 手勢模型，把新的模型覆蓋到這個位置即可：
+```bash
+./gradlew :app:assembleDebug
+```
+
+On first launch, grant microphone permission. Grant camera permission only if you want to use gesture recognition.
+
+## Common commands
+
+| Task | Windows command |
+| --- | --- |
+| Build debug APK | `.\gradlew.bat :app:assembleDebug` |
+| Run unit tests | `.\gradlew.bat test` |
+| Run lint | `.\gradlew.bat lint` |
+| Run Gradle checks | `.\gradlew.bat check` |
+| Run instrumented tests | `.\gradlew.bat connectedAndroidTest` |
+
+`connectedAndroidTest` requires a connected Android device or running emulator.
+
+## Usage notes
+
+- The main screen records audio and displays live subtitles.
+- The settings screen controls language, font size, TTS engine, speaker setup and transcript management.
+- Speaker enrollment records sample audio locally before calling the Speechmatics speaker API.
+- Saved transcripts are stored in the app-private files directory.
+- Gesture recognition uses `gesture/src/main/assets/gesture_recognizer.task`.
+
+## Troubleshooting
+
+| Problem | Check |
+| --- | --- |
+| App shows a config loading error | Confirm `app/src/main/res/raw/config.json` exists and is valid JSON. |
+| Speechmatics connection fails | Check the API key, network connection, `region`, and Speechmatics account access. |
+| No microphone input | Grant microphone permission and test on a device with microphone hardware. |
+| Gesture recognition does not start | Grant camera permission and confirm the device has an available camera. |
+| TTS does not speak | Check Android Text-to-Speech settings and installed voice data. |
+| Build cannot find SDK | Open Android Studio SDK Manager and install API 36 plus required build tools. |
+
+## Security and privacy notes
+
+- Microphone audio is streamed to Speechmatics for transcription.
+- Speaker enrollment audio and transcripts are handled locally by the app.
+- `config.json` contains a real API key and must stay out of Git.
+- The manifest currently enables app backup and cleartext traffic settings. Review these before using the project outside a demo or development environment.
+
+## Gesture model
+
+The checked-in MediaPipe gesture model lives here:
 
 ```text
 gesture/src/main/assets/gesture_recognizer.task
 ```
+
+To replace it, copy the new `.task` model to that path and rebuild the app.

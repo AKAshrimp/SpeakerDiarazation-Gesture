@@ -1,5 +1,6 @@
 package hk.edu.hkmu.speakerdiarazationdemo.audio;
 
+import android.annotation.SuppressLint;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
@@ -23,6 +24,7 @@ public class EnrollmentRecorder {
     private Thread recordingThread;
     private final ByteArrayOutputStream pcmData = new ByteArrayOutputStream();
 
+    @SuppressLint("MissingPermission")
     public void start() {
         if (isRecording) {
             return;

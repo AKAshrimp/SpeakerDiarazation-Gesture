@@ -1,5 +1,6 @@
 package hk.edu.hkmu.speakerdiarazationdemo;
 
+import android.annotation.SuppressLint;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
@@ -48,6 +49,7 @@ public class AudioRecorder {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private AudioRecord createRecorderForFormat(int audioFormat) {
         int bytesPerSample = audioFormat == AudioFormat.ENCODING_PCM_FLOAT ? 4 : 2;
         int minBuffer = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, audioFormat);

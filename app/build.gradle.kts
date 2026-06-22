@@ -30,6 +30,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+    lint {
+        disable += "ExpiredTargetSdkVersion"
+    }
+
     packaging {
         jniLibs {
             // Work around 16 KB page-size / APK native-load alignment issues on some devices.
