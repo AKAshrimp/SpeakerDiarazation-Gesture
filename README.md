@@ -164,6 +164,8 @@ On macOS or Linux:
 
 On first launch, grant microphone permission. Grant camera permission only if you want to use gesture recognition.
 
+If Android Studio opens the wrong module, select the `app` run configuration before installing the demo.
+
 ## Common commands
 
 | Task | Windows command |
